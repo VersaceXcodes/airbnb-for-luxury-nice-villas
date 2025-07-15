@@ -5,14 +5,11 @@ import axios from 'axios';
 
 
 // ---------- zod + type definitions (in-view) ----------
-import { z } from 'zod';
-const ticketSeverityEnum = z.enum(['low', 'medium', 'high', 'critical']);
-const ticketTypeEnum = z.enum(['damage', 'overbooking', 'noise_complaint', 'other']);
 
 interface TicketDraft {
   booking_id: string;
-  ticket_type: z.infer<typeof ticketTypeEnum>;
-  severity: z.infer<typeof ticketSeverityEnum>;
+  ticket_type: 'damage' | 'overbooking' | 'noise_complaint' | 'other';
+  severity: 'low' | 'medium' | 'high' | 'critical';
   subject: string;
   description: string;
   estimated_cost_usd?: number;
@@ -143,7 +140,7 @@ const UV_HostSupportTicket: React.FC = () => {
         await uploadToCloudinaryFn({ signedUrl: signed_url, file });
         const url = signed_url.split('?')[0]; // cloudinary URL
         setTicketDraft((prev) => ({ ...prev, photos: [...prev.photos, url] }));
-      } catch (err) {
+      } catch {
         setUploadError('Upload failed');
       }
     }

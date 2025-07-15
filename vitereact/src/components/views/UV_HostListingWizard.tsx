@@ -154,7 +154,9 @@ const UV_HostListingWizard: React.FC = () => {
   };
 
   const onBack = () => {
-    confirm('Save as draft and leave?') && navigate('/host/listings');
+    if (confirm('Save as draft and leave?')) {
+      navigate('/host/listings');
+    }
   };
 
   const ProgressBar = () => (

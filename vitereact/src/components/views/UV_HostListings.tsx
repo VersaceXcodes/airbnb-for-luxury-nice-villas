@@ -66,7 +66,11 @@ export default function UV_HostListings(): React.ReactElement {
 
   const toggleSelect = (villaId: string) => {
     const next = new Set(selected);
-    next.has(villaId) ? next.delete(villaId) : next.add(villaId);
+    if (next.has(villaId)) {
+      next.delete(villaId);
+    } else {
+      next.add(villaId);
+    }
     setSelected(next);
   };
 

@@ -114,7 +114,7 @@ const UV_HostInbox: React.FC = () => {
   useEffect(() => {
     if (scrollRef.current && messagesQ.data)
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [qBookingId, messagesQ.isSuccess]);
+  }, [qBookingId, messagesQ.isSuccess, messagesQ.data]);
 
   // ------------- desktop breakpoint -------------
   const screenSize = use_app_store((s) => s.screen_size);

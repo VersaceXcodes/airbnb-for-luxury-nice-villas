@@ -152,7 +152,7 @@ const CheckoutForm: React.FC = () => {
       }
     }, 1000);
     return () => clearInterval(iv);
-  }, [holdExpiresAt]);
+  }, [holdExpiresAt, currentStep, navigate, pushNotification]);
 
   // -- helpers
   const gotoStep = (s: Step) => {

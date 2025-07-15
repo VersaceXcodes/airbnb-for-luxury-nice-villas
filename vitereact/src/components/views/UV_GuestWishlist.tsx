@@ -67,7 +67,7 @@ const UV_GuestWishlist: React.FC = () => {
     if (!wishlistId) {
       return '';
     }
-    // mock share URL - back-end returns share slug; frontend constructs full
+    // share URL - back-end returns share slug; frontend constructs full
     return `${window.location.origin}/wishlist/${wishlistId}`;
   };
 

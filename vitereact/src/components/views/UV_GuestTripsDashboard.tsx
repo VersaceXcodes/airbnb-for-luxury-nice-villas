@@ -41,14 +41,14 @@ const UV_GuestTripsDashboard: React.FC = () => {
     enabled: !!auth_user?.id
   });
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const upcoming = useMemo(
     () => bookings.filter((b) => new Date(b.check_out) > now),
-    [bookings]
+    [bookings, now]
   );
   const past = useMemo(
     () => bookings.filter((b) => new Date(b.check_out) <= now),
-    [bookings]
+    [bookings, now]
   );
   const current_list = active_tab === 'upcoming' ? upcoming : past;
 
@@ -59,7 +59,7 @@ const UV_GuestTripsDashboard: React.FC = () => {
         new Date(b.check_in) > now &&
         b.status === 'pending'
     ).length;
-  }, [bookings]);
+  }, [bookings, now]);
 
   return (
     <>

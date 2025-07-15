@@ -7,26 +7,22 @@ import { use_app_store } from '@/store/main';
 // Explicit axios instance reused from global store
 import { AxiosError } from 'axios';
 
-// Small SVG Star component inlined to minimise size
-const SvgStar = ({ filled, color }: { filled: boolean; color: string }) => (
-  <svg
-    width={32}
-    height={32}
-    viewBox="0 0 24 24"
-    fill={filled ? color : 'transparent'}
-    stroke={color}
-    className={`transition-all duration-200 cursor-pointer ${
-      filled ? 'scale-110' : 'scale-100'
-    }`}
-  >
-    <path
-      strokeWidth={2}
-      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-    />
-  </svg>
-);
-
 const UV_GuestReview: React.FC = () => {
+  // Small SVG Star component inlined to minimise size
+  const SvgStar = ({ filled, color }: { filled: boolean; color: string }) => (
+    <svg
+      width={32}
+      height={32}
+      viewBox="0 0 24 24"
+      fill={filled ? color : 'transparent'}
+      stroke={color}
+      className={`transition-all duration-200 cursor-pointer ${
+        filled ? 'scale-110' : 'scale-100'
+      }`}
+    >
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  );
   const navigate = useNavigate();
   const { bookingId } = useParams<{ bookingId: string }>();
   const apiClient = use_app_store(state => state.api_client);

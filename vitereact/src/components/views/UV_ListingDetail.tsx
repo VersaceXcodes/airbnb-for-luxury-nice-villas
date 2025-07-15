@@ -95,7 +95,7 @@ const UV_ListingDetail: React.FC = () => {
         { headers: { Authorization: `Bearer ${authUser?.id}` } }
       );
       pushNotification({ type: 'success', title: 'Updated', body: 'Your favorites list was updated' });
-    } catch (err) {
+    } catch {
       pushNotification({ type: 'error', title: 'Error', body: 'Could not update wishlist' });
     }
   };

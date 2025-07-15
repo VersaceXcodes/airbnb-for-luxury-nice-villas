@@ -3,37 +3,35 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { use_app_store } from '@/store/main';
-import { z } from 'zod';
+
 
 /* -------------------------------------------------------------------------- */
 /*                           Schema inference helpers                           */
 /* -------------------------------------------------------------------------- */
-const moderationQueueRowSchema = z.object({
-  id: z.string(),
-  villa_title: z.string(),
-  owner_name: z.string(),
-  created_at: z.string(),
-  status: z.enum(['pending', 'approved', 'rejected', 'needs_review']),
-  checklist: z.object({
-    photos_verified: z.boolean(),
-    description_complete: z.boolean(),
-    insurance_verified: z.boolean(),
-    inspection_passed: z.boolean(),
-  }),
-});
-type ModerationQueueRow = z.infer<typeof moderationQueueRowSchema>;
+type ModerationQueueRow = {
+  id: string;
+  villa_title: string;
+  owner_name: string;
+  created_at: string;
+  status: 'pending' | 'approved' | 'rejected' | 'needs_review';
+  checklist: {
+    photos_verified: boolean;
+    description_complete: boolean;
+    insurance_verified: boolean;
+    inspection_passed: boolean;
+  };
+};
 
-const dmgTicketSchema = z.object({
-  id: z.string(),
-  booking_id: z.string(),
-  villa_title: z.string(),
-  reported_at: z.string(),
-  severity: z.string(),
-  estimated_cost_usd: z.number().optional(),
-  photos: z.array(z.string()),
-  stripe_hold_id: z.string().optional(),
-});
-type DmgTicket = z.infer<typeof dmgTicketSchema>;
+type DmgTicket = {
+  id: string;
+  booking_id: string;
+  villa_title: string;
+  reported_at: string;
+  severity: string;
+  estimated_cost_usd?: number;
+  photos: string[];
+  stripe_hold_id?: string;
+};
 
 type KpiResp = {
   totalListings: number;
@@ -66,13 +64,6 @@ const UV_AdminDashboard: React.FC = () => {
   const [inputBuffer, setInputBuffer] = useState('');
 
   /* ------------------------------------------------------------------------ */
-  /*                                 Guards                                   */
-  /* ------------------------------------------------------------------------ */
-  if (!authUser || authUser.role !== 'admin') {
-    return <div className="p-10 text-center text-red-500">Access denied – admin role required</div>;
-  }
-
-  /* ------------------------------------------------------------------------ */
   /*                                Queries                                   */
   /* ------------------------------------------------------------------------ */
   const { data: kpis, isLoading: kpiLoading } = useQuery({
@@ -81,6 +72,7 @@ const UV_AdminDashboard: React.FC = () => {
       const { data } = await axios.get<KpiResp>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/admin/kpis`);
       return data;
     },
+    enabled: !!authUser && authUser.role === 'admin',
   });
 
   const { data: moderationRows = [], isLoading: rowsLoading } = useQuery({
@@ -92,7 +84,7 @@ const UV_AdminDashboard: React.FC = () => {
       );
       return data;
     },
-    enabled: activeTab === 'queue',
+    enabled: !!authUser && authUser.role === 'admin' && activeTab === 'queue',
   });
 
   const { data: dmgTickets = [], isLoading: dmgLoading } = useQuery({
@@ -101,7 +93,7 @@ const UV_AdminDashboard: React.FC = () => {
       const { data } = await axios.get<DmgTicket[]>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/admin/damage_tickets?resolved=false`);
       return data;
     },
-    enabled: activeTab === 'tickets',
+    enabled: !!authUser && authUser.role === 'admin' && activeTab === 'tickets',
   });
 
   /* ------------------------------------------------------------------------ */
@@ -114,6 +106,13 @@ const UV_AdminDashboard: React.FC = () => {
     onSuccess: () => { queryClient.invalidateQueries({queryKey:['moderation-queue']}); notify({type:'success',title:'Updated',body:'Moderation updated'}); },
     onError: () => notify({type:'error',title:'Error',body:'Could not update'}),
   });
+
+  /* ------------------------------------------------------------------------ */
+  /*                                 Guards                                   */
+  /* ------------------------------------------------------------------------ */
+  if (!authUser || authUser.role !== 'admin') {
+    return <div className="p-10 text-center text-red-500">Access denied – admin role required</div>;
+  }
 
 
 

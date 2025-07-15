@@ -25,7 +25,7 @@ interface PricingRecommendation {
   villaId: string;
 }
 
-const uvHostPerformanceFC: React.FC = () => {
+const UVHostPerformance: React.FC = () => {
   const queryClient = useQueryClient();
   const authUser = use_app_store(s => s.auth_user);
   const screenSize = use_app_store(s => s.screen_size);
@@ -37,10 +37,10 @@ const uvHostPerformanceFC: React.FC = () => {
   if (startParam === '30_days_ago') startParam = subDays(new Date(), 30).toISOString().split('T')[0];
   if (endParam === 'today') endParam = new Date().toISOString().split('T')[0];
 
-  const selectedDateRange = {
+  const selectedDateRange = useMemo(() => ({
     start: startParam,
     end: endParam,
-  };
+  }), [startParam, endParam]);
 
   // ----- react-query fetch -----
   const { isLoading: loadingKpis, data } = useQuery({
@@ -261,4 +261,4 @@ const uvHostPerformanceFC: React.FC = () => {
     </>
   );
 };
-export default uvHostPerformanceFC;
+export default UVHostPerformance;
