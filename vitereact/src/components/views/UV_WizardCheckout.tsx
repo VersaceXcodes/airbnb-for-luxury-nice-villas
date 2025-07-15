@@ -10,7 +10,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import type { Booking, Villa } from '@schema';
+// import type { Booking, Villa } from '@schema';
 
 // -- helpers
 const LS_KEY = 'checkout_draft';
@@ -262,7 +262,7 @@ const CheckoutForm: React.FC = () => {
               <section>
                 <h2 className="text-2xl font-bold mb-4">Guest & Payment</h2>
                 <div className="space-y-4">
-                  {[['first_name', 'First'], ['last_name', 'Last']] as const).map(([k, label]) => (
+                  {([['first_name', 'First'], ['last_name', 'Last']] as const).map(([k, label]) => (
                     <div key={k}>
                       <label className="font-semibold block mb-1">{label}</label>
                       <input type="text" className="border rounded px-2 py-1 w-full" value={draft.guest[k] || ''} onChange={(e) => setDraft((d) => ({ ...d, guest: { ...d.guest, [k]: e.target.value } }))} />

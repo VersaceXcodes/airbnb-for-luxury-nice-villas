@@ -455,7 +455,7 @@ const UV_Search: React.FC = () => {
                 <button
                   onClick={() => {
                     const p = new URLSearchParams();
-                    ["q", start Date, endDate].forEach(k => {
+                    ["q", "startDate", "endDate"].forEach(k => {
                       const v = searchParams.get(k);
                       if (v) p.set(k, v);
                     });

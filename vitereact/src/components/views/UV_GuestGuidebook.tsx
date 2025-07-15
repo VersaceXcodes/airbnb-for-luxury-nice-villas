@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { z } from 'zod';
 import { QRCodeCanvas } from 'qrcode.react';
-import { guidebookSchema, type Guidebook } from '@schema';
+// import { guidebookSchema, type Guidebook } from '@schema';
 import { useAppStore } from '@/store/main';
 
 // ----------------------------------

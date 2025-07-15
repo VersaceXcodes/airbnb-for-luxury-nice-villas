@@ -3,7 +3,7 @@ import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import type { Booking, Villa } from '@schema';
+// import type { Booking, Villa } from '@schema';
 
 // one-shot confetti type
 declare global {

@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
 import { useAppStore } from '@/store/main';
 import { z } from 'zod';
-import { Payout, Host } from '@schema';
+// import { Payout, Host } from '@schema';
 
 const UV_HostPayments: React.FC = () => {
   const apiClient = useAppStore(state => state.api_client);

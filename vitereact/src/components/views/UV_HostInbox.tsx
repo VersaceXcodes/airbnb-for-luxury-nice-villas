@@ -3,7 +3,7 @@ import { Link, useSearchParams, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { BookingStatusEnum } from '@schema';
+// // import { BookingStatusEnum } from '@schema';
 
 const api_base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -71,9 +71,9 @@ const UV_HostInbox: React.FC = () => {
     queryKey: ['host_threads', qTab, user?.id],
     async queryFn() {
       const filter = tabToBookingFilter();
-      const res = await axios.get<ThreadEntry[]>(`${api_base}/bookings`, {
+      const res = await axios.get<ThreadEntry[]>(api_base + '/bookings', {
         params: { host_user_id: user?.id, ...(filter.length && { status: filter.join(',') }) },
-        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        headers: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') },
       });
       return res.data;
     },
@@ -84,9 +84,9 @@ const UV_HostInbox: React.FC = () => {
   const messagesQ = useInfiniteQuery<MessageEntry[], Error>({
     queryKey: ['messages', qBookingId],
     async queryFn({ pageParam = 0 }) {
-      const res = await axios.get<MessageEntry[]>(`${api_base}/bookings/${qBookingId}/messages`, {
+      const res = await axios.get<MessageEntry[]>(api_base + '/bookings/' + qBookingId + '/messages', {
         params: { limit: 50, offset: pageParam },
-        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        headers: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') },
       });
       return res.data;
     },
@@ -97,10 +97,10 @@ const UV_HostInbox: React.FC = () => {
   // ------------- SEND message mutation -------------
   const mutation = useMutation<MessageEntry, Error, { body: string }>({
     async mutationFn({ body }) {
-      const res = await axios.post<MessageEntry>(`${api_base}/messages`, {
+      const res = await axios.post<MessageEntry>(api_base + '/messages', {
         bookingId: qBookingId,
         body,
-      }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || '' } }});
+      }, { headers: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') }});
       return res.data;
     },
     onSuccess: () => {
@@ -138,16 +138,15 @@ const UV_HostInbox: React.FC = () => {
         <div className="flex flex-1 overflow-hidden">
           {/* THREAD LIST (desktop 320px or hidden on mobile when thread open) */}
           <aside
-            className={`bg-white border-r border-neutral-200 overflow-y-auto transition-all ${isMobile && qBookingId ? 'hidden' : 'block'
-              } ${!isMobile ? 'w-80 flex-shrink-0' : 'w-full'}`}
+            className="bg-white border-r border-neutral-200 overflow-y-auto transition-all"
           >
             {/* tabs row */}
             <nav className="flex text-sm border-b border-neutral-200">
               {TABS.map((tab) => (
                 <Link
                   key={tab}
-                  to={`/host/inbox?tab=${tab}`}
-                  className={`flex-1 py-2 text-center capitalize ${tab === qTab ? 'bg-blue-50 border-b-2 border-blue-600 text-blue-700' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                  to="/host/inbox"
+                  className="flex-1 py-2 text-center capitalize"
                 >
                   {tab}
                 </Link>
@@ -162,10 +161,10 @@ const UV_HostInbox: React.FC = () => {
               <button
                 key={t.bookingId}
                 onClick={() => setSelectedBookingId(t.bookingId)}
-                className={`w-full p-3 flex items-start space-x-3 border-b border-neutral-100 ${t.bookingId === qBookingId ? 'bg-blue-50' : 'hover:bg-neutral-50'}`}
+                className="w-full p-3 flex items-start space-x-3 border-b border-neutral-100"
               >
                 <img
-                  src={t.guestAvatarUrl || `https://picsum.photos/seed/${t.guestName}/40`}
+                  src={t.guestAvatarUrl || "https://picsum.photos/seed/default/40"}
                   alt={t.guestName}
                   className="w-10 h-10 rounded-full"
                 />
@@ -188,7 +187,7 @@ const UV_HostInbox: React.FC = () => {
 
           {/* MESSAGES PANE */} 
           <section
-            className={`flex-1 flex flex-col bg-neutral-50 overflow-hidden ${isMobile && !qBookingId ? 'hidden' : 'block'}`}
+            className="flex-1 flex flex-col bg-neutral-50 overflow-hidden"
           >
             {!qBookingId ? (
               <div className="flex-1 flex items-center justify-center text-neutral-400">
@@ -215,7 +214,7 @@ const UV_HostInbox: React.FC = () => {
                     </button>
                   )}
                   <img
-                    src={`https://picsum.photos/seed/${qBookingId}/32`}
+                    src="https://picsum.photos/seed/default/32"
                     className="w-8 h-8 rounded-full"
                     alt="booking"
                   />
@@ -237,10 +236,10 @@ const UV_HostInbox: React.FC = () => {
                     .map((msg) => (
                       <div
                         key={msg.id}
-                        className={`max-w-[70%] ${msg.senderRole === 'host' ? 'ml-auto text-right' : ''}`}
+                        className="max-w-[70%]"
                       >
                         <div
-                          className={`inline-block px-3 py-2 rounded-lg text-sm ${msg.senderRole === 'host' ? 'bg-blue-600 text-white' : 'bg-white shadow'}`}
+                          className="inline-block px-3 py-2 rounded-lg text-sm bg-white shadow"
                         >
                           {msg.body}
                         </div>

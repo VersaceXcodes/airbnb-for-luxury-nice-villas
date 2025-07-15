@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import type { GuestReview, CreateGuestReviewInput, Booking } from '@schema';
+// import type { GuestReview, CreateGuestReviewInput, Booking } from '@schema';
 import { useAppStore } from '@/store/main';
 
 // Explicit axios instance reused from global store

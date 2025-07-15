@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { z } from 'zod';
-import { createUserInputSchema, User } from '@schema'; // pulled from shared types
+// import { createUserInputSchema, User } from '@schema'; // pulled from shared types
 import { use_app_store } from '@/store/main';
 
 // --- Zod aliases --------------------------------------------------

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { twMerge } from 'tailwind-merge';
 import { useAppStore } from '@/store/main';
-import type { Villa } from '@schema';
+// import type { Villa } from '@schema';
 
 /* SSR-friendly helper to format price */
 const format_price = (p: number) =>

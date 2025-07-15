@@ -74,7 +74,7 @@
     "@stripe/stripe-js": "*",
     "@stripe/react-stripe-js": "*",
     "canvas-confetti": "*",
-    "@schema": "*",
+
     "qrcode.react": "*"
   },
   "devDependencies": {

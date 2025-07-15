@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
 import { z } from 'zod';
-import { villaSchema, CalendarEvent, guestReviewSchema } from '@schema';
+// import { villaSchema, CalendarEvent, guestReviewSchema } from '@schema';
 
 // derive internal types
 type Villa = z.infer<typeof villaSchema>;

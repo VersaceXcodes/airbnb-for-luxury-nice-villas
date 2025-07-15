@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { CalendarEvent, CreateCalendarEventInput, UpdateCalendarEventInput } from '@schema';
+// import { CalendarEvent, CreateCalendarEventInput, UpdateCalendarEventInput } from '@schema';
 
 type CalendarView = 'month' | 'week' | 'list';
 
