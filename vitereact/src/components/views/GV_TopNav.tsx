@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { use_app_store } from '@/store/main';
 import { z } from 'zod';
@@ -13,7 +12,7 @@ export const GV_TopNav: React.FC = () => {
   // --- Zustand store selectors ---
   const auth_user = use_app_store(state => state.auth_user);
   const api_client = use_app_store(state => state.api_client);
-  const push_notification = use_app_store(state => state.push_notification);
+
   const clear_auth_user = use_app_store(state => state.clear_auth_user);
 
   // --- internal component state ---
@@ -22,26 +21,30 @@ export const GV_TopNav: React.FC = () => {
   const [show_notifications, set_show_notifications] = useState(false);
   const [show_user_menu, set_show_user_menu] = useState(false);
 
-  const location = useLocation();
+
   const navigate = useNavigate();
   const nav_ref = useRef<HTMLElement>(null);
   const suggestions_ref = useRef<HTMLUListElement>(null);
 
   // --- queries ---
-  const { data: suggestions_data, isFetching: is_suggestions_fetching } = useQuery(['suggestions', search_query], async () => {
-    if (search_query.trim().length < 2) return { suggestions: [] };
-    const { data } = await api_client.get(`/search/suggestions`, { params: { q: search_query } });
-    return suggestionsPayloadSchema.parse(data);
-  }, { enabled: search_query.trim().length >= 2 });
+  const { data: suggestions_data, isFetching: is_suggestions_fetching } = useQuery({
+    queryKey: ['suggestions', search_query],
+    queryFn: async () => {
+      if (search_query.trim().length < 2) return { suggestions: [] };
+      const { data } = await api_client.get(`/search/suggestions`, { params: { q: search_query } });
+      return suggestionsPayloadSchema.parse(data);
+    },
+    enabled: search_query.trim().length >= 2
+  });
 
-  const { data: wishlists_count } = useQuery(
-    ['wishlists', auth_user?.id],
-    async () => {
+  const { data: wishlists_count } = useQuery({
+    queryKey: ['wishlists', auth_user?.id],
+    queryFn: async () => {
       const { data } = await api_client.get('/guest/wishlists');
       return { count: Array.isArray(data?.wishlists) ? data.wishlists.reduce((sum: number, w: any) => sum + w.villas?.length, 0) : 0 };
     },
-    { enabled: Boolean(auth_user?.role === 'guest') },
-  );
+    enabled: Boolean(auth_user?.role === 'guest')
+  });
 
   // --- handlers ---
   const handle_suggestion_click = (item: z.infer<typeof suggestionSchema>) => {

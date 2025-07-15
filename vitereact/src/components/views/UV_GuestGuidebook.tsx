@@ -1,11 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { z } from 'zod';
 import { QRCodeCanvas } from 'qrcode.react';
-// import { guidebookSchema, type Guidebook } from '@schema';
-import { useAppStore } from '@/store/main';
+import { guidebookSchema } from "@/schema";
 
 // ----------------------------------
 // API fetchers
@@ -25,7 +23,6 @@ const fetchGuidebook = async (villaId: string) => {
 // ----------------------------------
 // Helper to render POI cards
 // ----------------------------------
-type POI = { name: string; lat: number; lng: number; note: string };
 
 // ----------------------------------
 // Component
@@ -38,17 +35,17 @@ const UV_GuestGuidebook: React.FC = () => {
     data: booking,
     isLoading: bookingLoading,
     error: bookingError,
-  } = useQuery(['booking', bookingId], () => fetchBooking(bookingId!), { enabled: !!bookingId });
+  } = useQuery({ queryKey: ['booking', bookingId], queryFn: () => fetchBooking(bookingId!), enabled: !!bookingId });
 
   const {
     data: guide,
     isLoading: guideLoading,
     error: guideError,
-  } = useQuery(
-    ['guidebook', booking?.villa_id],
-    () => fetchGuidebook(booking!.villa_id),
-    { enabled: !!booking?.villa_id },
-  );
+  } = useQuery({
+    queryKey: ['guidebook', booking?.villa_id],
+    queryFn: () => fetchGuidebook(booking!.villa_id),
+    enabled: !!booking?.villa_id
+  });
 
   //-------- Panic button visibility on night hours
   const [showPanic, setShowPanic] = React.useState(false);
@@ -124,7 +121,7 @@ const UV_GuestGuidebook: React.FC = () => {
                 <article
                   className="prose dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{
-                    __html: body.replaceAll('\n', '<br/>'),
+                    __html: body.replace(/\\n/g, '<br/>'),
                   }}
                 />
               </details>

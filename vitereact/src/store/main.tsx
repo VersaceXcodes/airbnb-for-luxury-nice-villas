@@ -16,6 +16,8 @@ export interface AuthUser {
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
+  phone_e164?: string | null;
+  wishlist_villa_ids?: string[];
 }
 
 export type ScreenSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';

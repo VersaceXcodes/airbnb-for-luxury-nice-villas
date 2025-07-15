@@ -3,8 +3,8 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
-// import { Booking } from '@schema';
+import { use_app_store } from '@/store/main';
+import { Booking } from "@/schema";
 
 type Tab = 'upcoming' | 'past';
 interface LoyaltyBalance {
@@ -13,34 +13,33 @@ interface LoyaltyBalance {
 
 const UV_GuestTripsDashboard: React.FC = () => {
   const [active_tab, set_active_tab] = useState<Tab>('upcoming');
-  const [show_mobile_fab, set_show_mobile_fab] = useState(false);
   const [selected_booking_id, set_selected_booking_id] = useState<string | null>(null);
 
-  const auth_user = useAppStore((state) => state.auth_user);
+  const auth_user = use_app_store((state) => state.auth_user);
 
   // bookings
-  const { data: bookings = [], isLoading, isError } = useQuery<Booking[], Error>(
-    ['guest-bookings', auth_user?.id],
-    async () => {
+  const { data: bookings = [], isLoading, isError } = useQuery<Booking[], Error>({
+    queryKey: ['guest-bookings', auth_user?.id],
+    queryFn: async () => {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/guest/bookings`, {
         params: { guest_user_id: auth_user?.id, limit: 100, sort_by: 'check_in', sort_order: 'desc' },
       });
       return res.data;
     },
-    { enabled: !!auth_user?.id }
-  );
+    enabled: !!auth_user?.id
+  });
 
   // loyalty
-  const { data: loyalty } = useQuery<LoyaltyBalance | null, Error>(
-    ['loyalty-credits', auth_user?.id],
-    async () => {
+  const { data: loyalty } = useQuery<LoyaltyBalance | null, Error>({
+    queryKey: ['loyalty-credits', auth_user?.id],
+    queryFn: async () => {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/loyalty_credits/balance`, {
         params: { guest_user_id: auth_user?.id },
       });
       return res.data;
     },
-    { enabled: !!auth_user?.id }
-  );
+    enabled: !!auth_user?.id
+  });
 
   const now = new Date();
   const upcoming = useMemo(
@@ -58,7 +57,7 @@ const UV_GuestTripsDashboard: React.FC = () => {
     return bookings.filter(
       (b) =>
         new Date(b.check_in) > now &&
-        (b.status === 'in_progress' || !b.contract_signed_at || b.balance_usd > 0)
+        b.status === 'pending'
     ).length;
   }, [bookings]);
 
@@ -205,8 +204,7 @@ const UV_GuestTripsDashboard: React.FC = () => {
                     </p>
                   )}
                   <p className="mt-1 text-xs text-slate-500">
-                    Total ${booking.total_usd.toLocaleString()}
-                    {booking.balance_usd > 0 && ` – ${booking.balance_usd.toLocaleString()} due`}
+                    Total ${booking.amount_usd.toLocaleString()}
                   </p>
                 </div>
               </div>

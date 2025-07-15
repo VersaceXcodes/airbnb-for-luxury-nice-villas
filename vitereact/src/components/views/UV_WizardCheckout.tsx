@@ -2,22 +2,20 @@ import React, {
   useEffect,
   useState,
   useRef,
-  useCallback,
 } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { loadStripe, StripeCardElement } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useParams, useNavigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement } from '@stripe/react-stripe-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { useAppStore } from '@/store/main';
-// import type { Booking, Villa } from '@schema';
+import { use_app_store } from '@/store/main';
+import { Villa } from "@/schema";
 
 // -- helpers
 const LS_KEY = 'checkout_draft';
 const STRIPE_PK = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_injected';
 const stripePromise = loadStripe(STRIPE_PK);
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 
 interface CheckoutDraft {
   villa_id: string;
@@ -44,21 +42,20 @@ interface StepValidations {
   3?: string;
 }
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 const parseFromQS = (key: string, def = ''): string =>
   new URLSearchParams(location.search).get(key) || def;
 
 const CheckoutForm: React.FC = () => {
-  const { villaSlug, villaId } = useParams<{ villaSlug: string; villaId: string }>();
-  const stepParam = parseFromQS('step') as Step;
+  const { villaId } = useParams<{ villaSlug: string; villaId: string }>();
+  const stepParam = (parseFromQS('step') as unknown) as Step;
   const navigate = useNavigate();
 
   // global
-  const authUser = useAppStore((s) => s.auth_user);
-  const stripeLoaded = useAppStore((s) => s.stripe_script_loaded);
-  const pushNotification = useAppStore((s) => s.push_notification);
-  const apiClient = useAppStore((s) => s.api_client);
+  const pushNotification = use_app_store((s) => s.push_notification);
+  const apiClient = use_app_store((s) => s.api_client);
+  const stripeLoaded = true; // Assume stripe is loaded
 
   // local
   const [currentStep, setCurrentStep] = useState<Step>(stepParam || 1);
@@ -89,7 +86,7 @@ const CheckoutForm: React.FC = () => {
   const saveTimer = useRef<NodeJS.Timeout | null>(null);
 
   // -- query client
-  const qc = useQueryClient();
+  useQueryClient();
 
   // -- fetches
   const { data: villa, isLoading: loadingVilla } = useQuery<Villa>({
@@ -120,7 +117,7 @@ const CheckoutForm: React.FC = () => {
     mutationFn:async (body: { booking_id: string }) =>
       apiClient.put(`/bookings/${body.booking_id}/confirm`, { status: 'confirmed' }),
     onSuccess: () => {
-      pushNotification({ type: 'success', title: 'Booking Locked!' });
+      pushNotification({ type: 'success', title: 'Booking Locked!', body: 'Your booking has been successfully confirmed' });
       localStorage.removeItem(LS_KEY);
       navigate('/confirmation');
     },
@@ -131,7 +128,7 @@ const CheckoutForm: React.FC = () => {
       const form = new FormData();
       form.append('file', file);
       form.append('purpose', 'verification');
-      return apiClient.post<File>('/file_uploads', form).then(r => r.data);
+      return apiClient.post<{file_url: string}>('/file_uploads', form).then(r => r.data);
     },
     onMutate: () => setIsUploading(true),
     onSettled: () => setIsUploading(false),
@@ -150,7 +147,7 @@ const CheckoutForm: React.FC = () => {
     if (!holdExpiresAt || currentStep < 3) return;
     const iv = setInterval(() => {
       if (Date.now() / 1000 > holdExpiresAt) {
-        pushNotification({ type: 'error', title: 'Hold expired!' });
+        pushNotification({ type: 'error', title: 'Hold expired!', body: 'Your booking hold has expired. Please try again.' });
         navigate('/', { replace: true });
       }
     }, 1000);
@@ -319,7 +316,7 @@ const CheckoutForm: React.FC = () => {
                 <h2 className="text-2xl font-bold mb-4">Review & Sign</h2>
                 {/* iframe contract */}
                 <div className="border rounded overflow-hidden">
-                  <iframe src="https://demo.pandadoc.com/contract" className="w-full h-96" onLoad={(e) => setDraft((d) => ({ ...d, contract_signed: true }))}></iframe>
+                  <iframe src="https://demo.pandadoc.com/contract" className="w-full h-96" onLoad={() => setDraft((d) => ({ ...d, contract_signed: true }))}></iframe>
                 </div>
                 <p className="text-sm text-gray-600">Please scroll and sign above.</p>
                 {/* final totals */}

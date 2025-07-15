@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 import { z } from 'zod';
 
 /* -------------------------------------------------------------------------- */
@@ -42,27 +42,17 @@ type KpiResp = {
   revenueToday: number;
 };
 
-type OverrideResp = {
-  booking: {
-    id: string;
-    guest_email: string;
-    villa_title: string;
-    check_in: string;
-    check_out: string;
-    current_status: string;
-    possible_actions: string[];
-  };
-};
+
 
 /* -------------------------------------------------------------------------- */
 /*                          Admin Dashboard Component                           */
 /* -------------------------------------------------------------------------- */
 const UV_AdminDashboard: React.FC = () => {
-  const authUser = useAppStore((s) => s.auth_user);
-  const notify = useAppStore((s) => s.push_notification);
+  const authUser = use_app_store((s) => s.auth_user);
+  const notify = use_app_store((s) => s.push_notification);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+
   const queryClient = useQueryClient();
 
   const tabParam = searchParams.get('tab') ?? 'overview';
@@ -125,14 +115,7 @@ const UV_AdminDashboard: React.FC = () => {
     onError: () => notify({type:'error',title:'Error',body:'Could not update'}),
   });
 
-  const overrideBookingMut = useMutation({
-    mutationFn: async ({ bookingId, action }: {bookingId:string; action:string}) => {
-      const { data } = await axios.post<OverrideResp>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/admin/bookings/${bookingId}/override`, { action });
-      return data;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({queryKey:['admin-kpis']}); notify({type:'success',title:'Override',body:'Action executed'}); },
-    onError:   () => notify({type:'error',title:'Error',body:'Override failed'}),
-  });
+
 
   /* ------------------------------------------------------------------------ */
   /*                              Handlers                                    */

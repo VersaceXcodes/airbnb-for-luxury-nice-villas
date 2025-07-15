@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { Link, useSearchParams, useParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
-// // import { BookingStatusEnum } from '@schema';
+import { use_app_store } from '@/store/main';
+// import { Booking, Villa, User, UpdateUserInput, LoyaltyCredit, GuestReview, CreateGuestReviewInput, CalendarEvent, CreateCalendarEventInput, Guidebook, Host, Payout, MessageEntry, PricingRecommendation, TicketDraft } from "@/schema";
 
 const api_base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -39,8 +39,8 @@ const UV_HostInbox: React.FC = () => {
   const qTab = (search.get('tab') || 'inquiries') as (typeof TABS)[number];
   const qBookingId = search.get('bookingId') || search.get('threadId') || null;
 
-  const user = useAppStore((s) => s.auth_user);
-  const showToast = useAppStore((s) => s.push_notification);
+  const user = use_app_store((s) => s.auth_user);
+  const showToast = use_app_store((s) => s.push_notification);
   const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -90,6 +90,7 @@ const UV_HostInbox: React.FC = () => {
       });
       return res.data;
     },
+    initialPageParam: 0,
     getNextPageParam: (_, pages) => pages.length * 50,
     enabled: !!qBookingId && !!user?.id,
   });
@@ -116,7 +117,7 @@ const UV_HostInbox: React.FC = () => {
   }, [qBookingId, messagesQ.isSuccess]);
 
   // ------------- desktop breakpoint -------------
-  const screenSize = useAppStore((s) => s.screen_size);
+  const screenSize = use_app_store((s) => s.screen_size);
   const isMobile = screenSize === 'xs' || screenSize === 'sm';
 
   // ------------- compose state -------------

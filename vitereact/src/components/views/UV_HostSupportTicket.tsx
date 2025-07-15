@@ -1,8 +1,8 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+
 
 // ---------- zod + type definitions (in-view) ----------
 import { z } from 'zod';
@@ -61,7 +61,6 @@ const createTicketFn = async (payload: TicketDraft): Promise<CreateTicketRespons
   // Map ticket_type to department + create extra damage report body if damage
   const postBody = {
     subject: payload.subject,
-    reporter_user_id: payload.reporter_user_id,
     booking_id: payload.booking_id,
     department:
       payload.ticket_type === 'damage'
@@ -89,7 +88,7 @@ const UV_HostSupportTicket: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const authUser = useAppStore((s) => s.auth_user);
+
 
   // Local state
   const [ticketDraft, setTicketDraft] = useState<TicketDraft>({
@@ -156,7 +155,7 @@ const UV_HostSupportTicket: React.FC = () => {
       alert('Subject & description required');
       return;
     }
-    mutationCreateTicket.mutate({ ...ticketDraft, reporter_user_id: authUser!.id });
+    mutationCreateTicket.mutate(ticketDraft);
   };
 
   if (!bookingId) return <>Missing booking ID</>;

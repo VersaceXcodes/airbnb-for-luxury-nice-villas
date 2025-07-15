@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -35,9 +35,9 @@ interface Props {
 }
 
 const UV_HostGuestProfileModal: React.FC<Props> = ({ open, close, guestId }) => {
-  const authUser = useAppStore((state) => state.auth_user);
+  const authUser = use_app_store((state) => state.auth_user);
   const queryClient = useQueryClient();
-  const screenSize = useAppStore((state) => state.screen_size);
+  const screenSize = use_app_store((state) => state.screen_size);
 
   // note field
   const [noteText, setNoteText] = useState<string>('');
@@ -46,7 +46,7 @@ const UV_HostGuestProfileModal: React.FC<Props> = ({ open, close, guestId }) => 
     queryKey: ['guestProfile', guestId],
     queryFn: async () => {
       const { data } = await axios.get(`${apiBase}/users/${guestId}/profile/host_safe`, {
-        headers: { Authorization: `Bearer ${useAppStore.getState().access_token}` },
+        headers: { Authorization: `Bearer ${use_app_store.getState().access_token}` },
       });
       setNoteText(data.quickNote ?? '');
       return data;
@@ -60,7 +60,7 @@ const UV_HostGuestProfileModal: React.FC<Props> = ({ open, close, guestId }) => 
     queryFn: async () => {
       const { data } = await axios.get(
         `${apiBase}/users/${guestId}/last_stay`,
-        { headers: { Authorization: `Bearer ${useAppStore.getState().access_token}` } },
+        { headers: { Authorization: `Bearer ${use_app_store.getState().access_token}` } },
       );
       return data || null;
     },
@@ -73,11 +73,11 @@ const UV_HostGuestProfileModal: React.FC<Props> = ({ open, close, guestId }) => 
       await axios.patch(
         `${apiBase}/hosts/${authUser?.id}/guests/${guestId}/quick_note`,
         { quick_note },
-        { headers: { Authorization: `Bearer ${useAppStore.getState().access_token}` } },
+        { headers: { Authorization: `Bearer ${use_app_store.getState().access_token}` } },
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['guestProfile', guestId]);
+      queryClient.invalidateQueries({ queryKey: ['guestProfile', guestId] });
     },
   });
 

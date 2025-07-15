@@ -2,9 +2,8 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 import { Heart, Share, ChevronDown } from 'lucide-react';
-import { z } from 'zod';
 
 // --- INFERRED TYPES from Zod ---
 type VillaTiny = {
@@ -24,8 +23,8 @@ const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}`
 
 // main component
 const UV_GuestWishlist: React.FC = () => {
-  const auth = useAppStore((s) => s.auth_user);
-  const pushNotification = useAppStore((s) => s.push_notification);
+  const auth = use_app_store((s) => s.auth_user);
+  const pushNotification = use_app_store((s) => s.push_notification);
   const qc = useQueryClient();
 
   // ------------ Query: get Singleton Wishlist ------------
@@ -76,7 +75,7 @@ const UV_GuestWishlist: React.FC = () => {
     const url = generateShareUrl();
     if (!url) return;
     navigator.clipboard.writeText(url).then(() => {
-      pushNotification({ type: 'success', title: 'Share link copied' });
+      pushNotification({ type: 'success', title: 'Share link copied', body: 'The wishlist share link has been copied to your clipboard' });
       // Snowplow event
       if ('snowplow' in window) {
         (window as any).snowplow('trackSelfDescribingEvent', {

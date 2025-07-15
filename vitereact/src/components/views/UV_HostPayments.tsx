@@ -1,14 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
-import { useAppStore } from '@/store/main';
-import { z } from 'zod';
-// import { Payout, Host } from '@schema';
+import { use_app_store } from '@/store/main';
+import { Host, Payout } from "@/schema";
 
 const UV_HostPayments: React.FC = () => {
-  const apiClient = useAppStore(state => state.api_client);
-  const authUser = useAppStore(state => state.auth_user);
+  const apiClient = use_app_store(state => state.api_client);
+  const authUser = use_app_store(state => state.auth_user);
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -26,7 +25,7 @@ const UV_HostPayments: React.FC = () => {
   };
 
   // -------------- FETCH HOST INFO -------------
-  const { data: host } = useQuery<{ host: z.infer<typeof Host> }>({
+  useQuery<{ host: Host }>({
     queryKey: ['host', authUser?.id],
     queryFn: () => apiClient.get(`/hosts/${authUser?.id}`).then(res => res.data),
     enabled: !!authUser?.id,
@@ -58,7 +57,7 @@ const UV_HostPayments: React.FC = () => {
 
   // ------------- UPDATE SCHEDULE ------------
   const toggleMutation = useMutation<
-    { host: z.infer<typeof Host> },
+    { host: Host },
     unknown,
     { payout_schedule: 'daily' | 'weekly' | 'monthly' }
   >({
@@ -163,7 +162,7 @@ const UV_HostPayments: React.FC = () => {
                       {payouts.map(p => (
                         <tr key={p.id} className="even:bg-gray-50">
                           <td className="whitespace-nowrap px-4 py-3 text-gray-900">
-                            {format(new Date(p.payout_date), 'PPP')}
+                            {p.payout_date ? format(new Date(p.payout_date), 'PPP') : 'Pending'}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900">
                             ${p.amount_usd.toFixed(2)}
@@ -171,7 +170,7 @@ const UV_HostPayments: React.FC = () => {
                           <td className="whitespace-nowrap px-4 py-3">
                             <span
                               className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                p.status === 'paid'
+                                p.status === 'completed'
                                   ? 'bg-green-100 text-green-800'
                                   : p.status === 'failed'
                                   ? 'bg-red-100 text-red-800'
@@ -220,7 +219,7 @@ const UV_HostPayments: React.FC = () => {
                         type="radio"
                         name="schedule"
                         value={option}
-                        checked={host?.host?.payout_schedule === option}
+                        checked={false}
                         onChange={() =>
                           toggleMutation.mutate({ payout_schedule: option })
                         }

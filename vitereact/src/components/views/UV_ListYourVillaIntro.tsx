@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAppStore } from "@/store/main";
+import { use_app_store } from "@/store/main";
 
 type Testimonial = {
   quote: string;
@@ -57,7 +57,7 @@ const faqs = [
 ];
 
 const UV_ListYourVillaIntro: React.FC = () => {
-  const { screen_size } = useAppStore((s) => s);
+  const { screen_size } = use_app_store((s) => s);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 

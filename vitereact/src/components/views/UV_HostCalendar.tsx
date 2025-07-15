@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
-// import { CalendarEvent, CreateCalendarEventInput, UpdateCalendarEventInput } from '@schema';
+import { use_app_store } from '@/store/main';
+import { CalendarEvent, CreateCalendarEventInput } from "@/schema";
 
 type CalendarView = 'month' | 'week' | 'list';
 
@@ -20,8 +20,7 @@ export default function UV_HostCalendar() {
   const { villaId: paramVillaId } = useParams<{ villaId?: string }>();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const authUser = useAppStore((state) => state.auth_user);
-  const apiClient = useAppStore((state) => state.api_client);
+  const authUser = use_app_store((state) => state.auth_user);
 
   // State mapping
   const selectedVillaId = paramVillaId ?? searchParams.get('villaId') ?? null;
@@ -123,17 +122,17 @@ export default function UV_HostCalendar() {
   const handleCellClick = (date: string) => {
     // quick block toggle if no prior event
     if (!selectedVillaId) return;
-    const existing = events.find((e) => e.start_date.slice(0, 10) === date && e.event_type === 'blocked');
+    const existing = events.find((e) => e.start_date.slice(0, 10) === date && e.type === 'blocked');
     if (existing) {
       axios.delete(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/calendar_events/${existing.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       }).then(() => refetch());
     } else {
       createBlockMutation.mutate({
-        event_type: 'blocked',
-        start_date: new Date(date),
-        end_date: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
-        note: 'manual block via calendar',
+        type: 'blocked',
+        start_date: date,
+        end_date: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        title: 'Blocked',
       });
     }
   };
@@ -200,8 +199,8 @@ export default function UV_HostCalendar() {
             </div>
           ))}
           {days.map(({ date, events }) => {
-            const blockEvent = events.find((e) => e.event_type === 'blocked');
-            const bookingEvent = events.find((e) => e.event_type === 'booking');
+            const blockEvent = events.find((e) => e.type === 'blocked');
+            const bookingEvent = events.find((e) => e.type === 'booking');
             const bg = blockEvent ? 'bg-gray-400' : bookingEvent ? 'bg-red-500' : 'bg-green-100';
             return (
               <div
@@ -210,7 +209,7 @@ export default function UV_HostCalendar() {
                 className={`h-24 p-1 cursor-pointer transition hover:ring-2 ring-blue-500 ${bg}`}
               >
                 {date.slice(-2)}
-                {bookingEvent && <div className="truncate italic text-white text-[10px]">{bookingEvent.note || 'Booked'}</div>}
+                {bookingEvent && <div className="truncate italic text-white text-[10px]">{bookingEvent.title || 'Booked'}</div>}
               </div>
             );
           })}
@@ -224,7 +223,7 @@ export default function UV_HostCalendar() {
                 <span>
                   {ev.start_date.slice(0, 10)} → {ev.end_date.slice(0, 10)}
                 </span>
-                <span className="capitalize">{ev.event_type}</span>
+                <span className="capitalize">{ev.type}</span>
               </div>
             ))}
           </div>

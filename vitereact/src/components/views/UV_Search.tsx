@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { useAppStore } from "@/store/main";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { use_app_store } from "@/store/main";
 import { Loader2, MapPin, X } from "lucide-react";
 
 // --- shared schema (tiny subset returned by /search endpoint for cards) -----------------
@@ -20,10 +19,10 @@ interface VillaTiny {
 
 const UV_Search: React.FC = () => {
   // -------- 1. Zustand selectors (single value access) -----------------
-  const authUser = useAppStore(s => s.auth_user);
-  const screenSize = useAppStore(s => s.screen_size);
-  const pushNotification = useAppStore(s => s.push_notification);
-  const apiClient = useAppStore(s => s.api_client);
+  const authUser = use_app_store(s => s.auth_user);
+  const screenSize = use_app_store(s => s.screen_size);
+  const pushNotification = use_app_store(s => s.push_notification);
+  const apiClient = use_app_store(s => s.api_client);
 
   // -------- 2. URL params ------------------------------------------------
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,7 +44,6 @@ const UV_Search: React.FC = () => {
     isFetchingNextPage,
     isLoading,
     isError,
-    error,
     refetch,
   } = useInfiniteQuery<{
     data: VillaTiny[];
@@ -105,7 +103,7 @@ const UV_Search: React.FC = () => {
       pushNotification({ type: "info", title: "Sign in", body: "Login to manage your wishlist." });
       return;
     }
-    const prev = wishlistIds.has(villaId);
+
     // optimistic toggle
     apiClient
       .post(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/guest/wishlists/toggle`, {
@@ -146,12 +144,7 @@ const UV_Search: React.FC = () => {
 
   useEffect(() => setShowMap(isDesktop), [isDesktop]);
 
-  // -------- 9. Helper – remove param --------------------------------------
-  const removeParam = (key: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete(key);
-    setSearchParams(newParams, { replace: true });
-  };
+
 
   // -------- 10. SSR guard --------------------------------------------------
   const isSSR = typeof window === "undefined";

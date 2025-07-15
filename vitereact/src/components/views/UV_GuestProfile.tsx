@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-// import { type User, type UpdateUserInput, type LoyaltyCredit } from '@schema';
-import { useAppStore } from '@/store/main';
+import { User, UpdateUserInput, LoyaltyCredit } from "@/schema";
+import { use_app_store } from '@/store/main';
 
 // ------------ Zustand Helpers ------------
-const apiBase = () => useAppStore.getState().api_client;
+const apiBase = () => use_app_store.getState().api_client;
 
 // ------------ Fetchers -------------------
 const getCurrentUser = async (): Promise<User> =>
@@ -30,8 +28,7 @@ const getSavedCards = async () => {
 const deleteCard = async (pmId: string) =>
   (await apiBase().delete(`/stripe/payment-methods/${pmId}`)).data;
 
-const addCard = async (token: string) =>
-  (await apiBase().post('/stripe/payment-methods', { token })).data;
+
 
 const changePassword = async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
   (await apiBase().post('/users/change-password', { currentPassword, newPassword })).data;
@@ -48,59 +45,58 @@ const uploadFile = async (file: File) => {
 
 // ------------ View Component -----------------
 const UV_GuestProfile: React.FC = () => {
-  const authUser = useAppStore((st) => st.auth_user)!;
+  const authUser = use_app_store((st) => st.auth_user)!;
   const queryClient = useQueryClient();
-  const screenSize = useAppStore((st) => st.screen_size);
-  const pushNotification = useAppStore((st) => st.push_notification);
+  const screenSize = use_app_store((st) => st.screen_size);
+  const pushNotification = use_app_store((st) => st.push_notification);
 
   // state for modal toggles
-  const [showAvatar, setShowAvatar] = useState(false);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [oldPwd, setOldPw] = useState('');
   const [newPwd, setNewPw] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [pwModalOpen, setPwModalOpen] = useState(false);
   const [faModalOpen, setFaModalOpen] = useState(false);
-  const cardModalOpen = useState(false)[0];
+
 
   // ---- Queries ----
-  const { data: user } = useQuery(['me'], getCurrentUser, { initialData: authUser, staleTime: Infinity });
-  const { data: credits = [] } = useQuery(['loyaltyCredits'], getCredits, { retry: false });
-  const { data: cards = [] } = useQuery(['savedCards'], getSavedCards, { retry: false });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: getCurrentUser, initialData: authUser, staleTime: Infinity });
+  const { data: credits = [] } = useQuery({ queryKey: ['loyaltyCredits'], queryFn: getCredits, retry: false });
+  const { data: cards = [] } = useQuery({ queryKey: ['savedCards'], queryFn: getSavedCards, retry: false });
 
   // ---- Mutations ----
-  const { mutate: updateUser } = useMutation(updateCurrentUser, {
+  const { mutate: updateUser } = useMutation({
+    mutationFn: updateCurrentUser,
     onSuccess: (data) => {
-      queryClient.setQueriesData(['me'], data);
+      queryClient.setQueriesData({ queryKey: ['me'] }, data);
       pushNotification({ type: 'success', title: 'Saved', body: 'Profile updated' });
     },
     onError: () => pushNotification({ type: 'error', title: 'Error', body: 'Could not update profile' }),
   });
 
-  const { mutate: doUpload } = useMutation(uploadFile, {
+  const { mutate: doUpload } = useMutation({
+    mutationFn: uploadFile,
     onSuccess: (url) => {
       if (user) updateUser({ id: user.id, avatar_url: url });
     },
   });
 
-  const { mutate: doRedeem } = useMutation(redeemCredit, {
-    onSettled: () => queryClient.invalidateQueries(['loyaltyCredits']),
+  const { mutate: doRedeem } = useMutation({
+    mutationFn: redeemCredit,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['loyaltyCredits'] }),
   });
 
-  const { mutate: doDeleteCard } = useMutation(deleteCard, {
-    onSettled: () => queryClient.invalidateQueries(['savedCards']),
+  const { mutate: doDeleteCard } = useMutation({
+    mutationFn: deleteCard,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['savedCards'] }),
   });
 
-  const { mutate: doAddCard } = useMutation(addCard, {
-    onSettled: () => queryClient.invalidateQueries(['savedCards']),
-    onError: () => pushNotification({ type: 'error', title: 'Card', body: 'Card add failed' }),
-  });
-
-  const { mutate: doChangePassword } = useMutation(changePassword, {
+  const { mutate: doChangePassword } = useMutation({
+    mutationFn: changePassword,
     onSuccess: () => pushNotification({ type: 'success', title: 'Success', body: 'Password updated' }),
   });
 
-  const { mutate: doToggle2FA } = useMutation(toggle2FA, {
+  const { mutate: doToggle2FA } = useMutation({
+    mutationFn: toggle2FA,
     onSuccess: (data: any) => pushNotification({ type: 'success', title: data.message || 'Done', body: '' }),
   });
 
@@ -224,7 +220,7 @@ const UV_GuestProfile: React.FC = () => {
             <button
               className="mt-3 text-sm bg-blue-600 text-white px-3 py-1 rounded"
               onClick={() => {
-                window.Stripe((window as any).Stripe)?.elements().create('card').mount('#add-card-form');
+                console.log('Add card functionality not implemented');
               }}
             >
               Add new card
@@ -296,8 +292,7 @@ const UV_GuestProfile: React.FC = () => {
                   <button onClick={() => setFaModalOpen(false)} className="text-sm">Cancel</button>
                   <button
                     onClick={() => {
-                      doToggle2FA(true, otpCode);
-                      setFaModalOpen(false);
+                       doToggle2FA(true);                      setFaModalOpen(false);
                     }}
                     className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
                   >

@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useParams, createSearchParams, useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, createSearchParams } from 'react-router-dom';
 import { z } from 'zod';
-import { useAppStore } from '@/store/main';
-import { format, subDays, parseISO, eachDayOfInterval } from 'date-fns';
+import { use_app_store } from '@/store/main';
+import { subDays, parseISO, format, eachDayOfInterval } from 'date-fns';
 
 // ----- minimal inline types from datamap -----
 interface KPIs {
@@ -15,11 +15,7 @@ interface KPIs {
   inquiryConversion: number;
   totalRevenueUSD: number;
 }
-interface DailyRevenue {
-  day: string;
-  revenueUSD: number;
-  bookingsCount: number;
-}
+
 interface PricingRecommendation {
   suggestionId: string;
   villaTitle: string;
@@ -31,8 +27,8 @@ interface PricingRecommendation {
 
 const uvHostPerformanceFC: React.FC = () => {
   const queryClient = useQueryClient();
-  const authUser = useAppStore(s => s.auth_user);
-  const screenSize = useAppStore(s => s.screen_size);
+  const authUser = use_app_store(s => s.auth_user);
+  const screenSize = use_app_store(s => s.screen_size);
 
   // ----- URL dateRange handling -----
   const [search, setSearch] = useSearchParams();
@@ -47,9 +43,9 @@ const uvHostPerformanceFC: React.FC = () => {
   };
 
   // ----- react-query fetch -----
-  const { isLoading: loadingKpis, data } = useQuery(
-    ['host-kpis', authUser?.id, selectedDateRange],
-    async () => {
+  const { isLoading: loadingKpis, data } = useQuery({
+    queryKey: ['host-kpis', authUser?.id, selectedDateRange],
+    queryFn: async () => {
       const url = `${
         import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
       }/hosts/${authUser!.id}/kpis?start=${selectedDateRange.start}&end=${selectedDateRange.end}`;
@@ -83,14 +79,12 @@ const uvHostPerformanceFC: React.FC = () => {
       }).parse(data);
       return parsed;
     },
-    {
-      enabled: !!authUser?.id,
-    }
-  );
+    enabled: !!authUser?.id,
+  });
 
   // ----- mutations -----
-  const applyPricingMutation = useMutation(
-    async (rec: PricingRecommendation) => {
+  const applyPricingMutation = useMutation({
+    mutationFn: async (rec: PricingRecommendation) => {
       const url = `${
         import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
       }/villas/${rec.villaId}/pricing_rules`;
@@ -101,20 +95,17 @@ const uvHostPerformanceFC: React.FC = () => {
         adjustment_percent: rec.priceDeltaPercent,
       });
     },
-    {
-      onSuccess: () => queryClient.invalidateQueries(['host-kpis']),
-    }
-  );
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['host-kpis'] }),
+  });
 
-  const exportReportMutation = useMutation(
-    async () => {
+  const exportReportMutation = useMutation({
+    mutationFn: async () => {
       const url = `${
         import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
       }/hosts/${authUser!.id}/reports/performance`;
       const { data } = await axios.post(url);
       return data.signed_url as string;
     },
-    {
       onSuccess: (signedUrl) => {
         window.open(signedUrl, '_blank');
       },
@@ -132,13 +123,13 @@ const uvHostPerformanceFC: React.FC = () => {
 
   // ----- revenueChart spark-line -----
   const revenueChartData = useMemo(() => {
-    const d = data?.revenueHistory || [];
+    const revenueHistory = data?.revenueHistory || [];
     const padded = eachDayOfInterval({
       start: parseISO(selectedDateRange.start),
       end: parseISO(selectedDateRange.end),
-    }).map(d => {
-      const match = d.find(r => r.day === format(d, 'yyyy-MM-dd'));
-      return { day: format(d, 'MMM dd'), revenueUSD: match ? match.revenueUSD : 0 };
+    }).map(date => {
+      const match = revenueHistory.find(r => r.day === format(date, 'yyyy-MM-dd'));
+      return { day: format(date, 'MMM dd'), revenueUSD: match ? match.revenueUSD : 0 };
     });
     return padded;
   }, [data, selectedDateRange]);
@@ -183,10 +174,10 @@ const uvHostPerformanceFC: React.FC = () => {
           />
           <button
             onClick={() => exportReportMutation.mutate()}
-            disabled={exportReportMutation.isLoading}
+            disabled={exportReportMutation.isPending}
             className="ml-auto mt-2 sm:mt-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
           >
-            {exportReportMutation.isLoading ? 'Generating…' : 'Export CSV'}
+            {exportReportMutation.isPending ? 'Generating…' : 'Export CSV'}
           </button>
         </div>
 
@@ -252,7 +243,7 @@ const uvHostPerformanceFC: React.FC = () => {
                   </span>
                   <button
                     onClick={() => applyPricingMutation.mutate(rec)}
-                    disabled={applyPricingMutation.isLoading}
+                    disabled={applyPricingMutation.isPending}
                     className="rounded bg-indigo-600 px-3 py-1 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
                   >
                     Apply

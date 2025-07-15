@@ -2,20 +2,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 import { z } from 'zod';
-// import { villaSchema, CalendarEvent, guestReviewSchema } from '@schema';
+import { Villa, villaSchema, guestReviewSchema } from "@/schema";
 
 // derive internal types
-type Villa = z.infer<typeof villaSchema>;
 type Review = z.infer<typeof guestReviewSchema>;
 
 const UV_ListingDetail: React.FC = () => {
   const { slug, id } = useParams<{ slug: string; id: string }>();
   const [searchParams] = useSearchParams();
-  const authUser = useAppStore((state) => state.auth_user);
-  const screenSize = useAppStore((state) => state.screen_size);
-  const pushNotification = useAppStore((state) => state.push_notification);
+  const authUser = use_app_store((state) => state.auth_user);
+  const screenSize = use_app_store((state) => state.screen_size);
+  const pushNotification = use_app_store((state) => state.push_notification);
 
   // local client states
   const [selectedCheckIn, setSelectedCheckIn] = useState<string | null>(searchParams.get('start_date'));
@@ -77,7 +76,7 @@ const UV_ListingDetail: React.FC = () => {
   const totalEstimate = useMemo(() => {
     if (!selectedCheckIn || !selectedCheckOut) return 0;
     const nights = (new Date(selectedCheckOut).getTime() - new Date(selectedCheckIn).getTime()) / 86400000;
-    let baseCost = nights * averageNightly;
+    let baseCost = nights * (averageNightly || 0);
     conciergeAddons.forEach(({ price, per_guest }) => {
       baseCost += per_guest ? price * selectedGuests : price;
     });
@@ -144,7 +143,6 @@ const UV_ListingDetail: React.FC = () => {
   if (!villa) return null;
 
   // amenity overlay list
-  const amenityKeys = ['pool', 'chef_kitchen', 'gym', 'cinema', 'concierge_24_7', 'pet_friendly', 'staff_quarters'];
   const amenityMap = [
     { key: 'pool', icon: '🏊', name: 'Private Pool' },
     { key: 'chef_kitchen', icon: '🍳', name: 'Chef Kitchen' },

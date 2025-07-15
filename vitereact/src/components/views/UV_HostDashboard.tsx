@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 
 // ----------------------------------------------------------
 // Static SVG icons (MIT license, heroicons 2.x)
@@ -86,7 +86,7 @@ const KpiSpark: React.FC<{ label: string; value: string; sparkData: { v: number 
 // Component
 // ----------------------------------------------------------
 const UV_HostDashboard: React.FC = () => {
-  const auth_user = useAppStore(state => state.auth_user);
+  const auth_user = use_app_store(state => state.auth_user);
   const [collapsed, setCollapsed] = useState(false);
 
   // ------------------------------------------------------------

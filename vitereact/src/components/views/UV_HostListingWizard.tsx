@@ -1,33 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useBeforeUnload } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { use_app_store } from '@/store/main';
-import {
-  createVillaInputSchema,
-  updateVillaInputSchema,
+import { 
+  villaSchema, 
+  createVillaInputSchema, 
   createRoomTypeInputSchema,
-  createAmenityInputSchema,
-  createPricingRuleInputSchema,
-  createCalendarEventInputSchema,
   createFileUploadInputSchema,
   locationDataSchema,
-  villaSchema,
   VillaStatus
-} from '@schema';
+} from '@/schema';
 import { z } from 'zod';
 
 type RoomPayload = z.infer<typeof createRoomTypeInputSchema>;
-type AmenityPayload = z.infer<typeof createAmenityInputSchema>;
-type PricingRulePayload = z.infer<typeof createPricingRuleInputSchema>;
-type CalendarEventPayload = z.infer<typeof createCalendarEventInputSchema>;
 type PhotoFile = z.infer<typeof createFileUploadInputSchema> & { id?: string };
 
 const UV_HostListingWizard: React.FC = () => {
   const navigate = useNavigate();
   const params = useParams<{ villaId?: string }>();
   const queryClient = useQueryClient();
-  const apiInstance = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000' });
+
 
   const authUser = use_app_store((s) => s.auth_user);
   const apiClient = use_app_store((s) => s.api_client);
@@ -54,9 +46,8 @@ const UV_HostListingWizard: React.FC = () => {
   const [rooms, setRooms] = useState<RoomPayload[]>([]);
   const [amenities, setAmenities] = useState<Record<string, boolean>>({});
   const [photos, setPhotos] = useState<PhotoFile[]>([]);
-  const [pricingRules, setPricingRules] = useState<PricingRulePayload[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEventPayload[]>([]);
-  const [policies, setPolicies] = useState({ cancellation_tier: 'moderate', security_deposit_usd: 1000, house_rules: [], checkin_time: '15:00', checkout_time: '10:00' });
+
+  const [policies, setPolicies] = useState({ cancellation_tier: 'moderate', security_deposit_usd: 1000, house_rules: [] as string[], checkin_time: '15:00', checkout_time: '10:00' });
 
   /* ------------------------ load existing data when edit ----------------------- */
   const { data: villa, isLoading } = useQuery({
@@ -73,17 +64,17 @@ const UV_HostListingWizard: React.FC = () => {
   useEffect(() => {
     if (villa) {
       setTitle(villa.title);
-      setDescription(villa.description);
+      setDescription(villa.description || '');
       setLocationData(villa.location_data);
-      setBedroomsTotal(villa.bedrooms_total);
-      setBathroomsTotal(villa.bathrooms_total);
+      setBedroomsTotal(villa.bedrooms_total || 0);
+      setBathroomsTotal(villa.bathrooms_total || 0);
       setMaxGuests(villa.max_guests);
-      setMaxPets(villa.max_pets);
-      setBasePricePerNight(villa.base_price_usd_per_night);
-      setCleaningFee(villa.cleaning_fee_usd);
-      setServiceFeeRatio(villa.service_fee_ratio);
-      setDamageWaiverRatio(villa.damage_waiver_ratio);
-      setPolicies(villa.policies);
+      setMaxPets(villa.max_pets || 0);
+      setBasePricePerNight(villa.base_price_usd_per_night || 0);
+      setCleaningFee(villa.cleaning_fee_usd || 0);
+      setServiceFeeRatio(villa.service_fee_ratio || 0);
+      setDamageWaiverRatio(villa.damage_waiver_ratio || 0);
+      setPolicies(villa.policies || { cancellation_tier: '', security_deposit_usd: 0, house_rules: [] as string[], checkin_time: '', checkout_time: '' });
     }
   }, [villa]);
 
@@ -124,7 +115,7 @@ const UV_HostListingWizard: React.FC = () => {
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
-  useBeforeUnload(({ currentTarget }) => currentTarget = () => null);
+  useBeforeUnload(() => dirty);
 
   /* --------------------------------- logic ------------------------------------ */
   const formPayload = () => {
@@ -133,7 +124,7 @@ const UV_HostListingWizard: React.FC = () => {
       slug: title.toLowerCase().replace(/\s+/g, '-'),
       title,
       description,
-      location_data,
+      location_data: locationData,
       bedrooms_total: bedroomsTotal,
       bathrooms_total: bathroomsTotal,
       max_guests: maxGuests,

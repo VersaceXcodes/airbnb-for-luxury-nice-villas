@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { twMerge } from 'tailwind-merge';
-import { useAppStore } from '@/store/main';
-// import type { Villa } from '@schema';
+
+import { use_app_store } from '@/store/main';
+import { Villa } from "@/schema";
 
 /* SSR-friendly helper to format price */
 const format_price = (p: number) =>
@@ -21,8 +21,8 @@ interface NewsletterResponse {
 /* === Main View === */
 const UV_Landing: React.FC = () => {
   /* ------------- Global store usage ------------- */
-  const screenSize = useAppStore((s) => s.screen_size);
-  const push_notification = useAppStore((s) => s.push_notification);
+  const screenSize = use_app_store((s) => s.screen_size);
+  const push_notification = use_app_store((s) => s.push_notification);
 
   /* ------------- Local component states ------------- */
   const [form, setForm] = React.useState({
@@ -197,7 +197,7 @@ const UV_Landing: React.FC = () => {
                 className="block w-80 shrink-0 bg-white rounded overflow-hidden shadow hover:shadow-xl transition"
               >
                 <img
-                  src={villa.hero_url || `https://picsum.photos/seed/${villa.id}/400/225`}
+                  src={villa.thumbnail_url || `https://picsum.photos/seed/${villa.id}/400/225`}
                   alt={villa.title}
                   width={400}
                   height={225}
@@ -207,7 +207,7 @@ const UV_Landing: React.FC = () => {
                 <div className="p-4">
                   <h3 className="truncate font-semibold">{villa.title}</h3>
                   <p className="text-slate-500 text-sm mt-1">
-                    {format_price(villa.base_price_usd_per_night)} / night · up to {villa.max_guests} guests
+                    {format_price(villa.base_price_usd_per_night || 0)} / night · up to {villa.max_guests} guests
                   </p>
                 </div>
               </Link>

@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { use_app_store } from '@/store/main';
 
 /* === GV Shared (shell) === */
-import GV_TopNav from '@/components/views/GV_TopNav.tsx';
+import { GV_TopNav } from '@/components/views/GV_TopNav.tsx';
 import GV_BottomBar from '@/components/views/GV_BottomBar.tsx';
 import GV_Footer from '@/components/views/GV_Footer.tsx';
 
@@ -26,7 +26,7 @@ import UV_HostListings from '@/components/views/UV_HostListings.tsx';
 import UV_HostListingWizard from '@/components/views/UV_HostListingWizard.tsx';
 import UV_HostCalendar from '@/components/views/UV_HostCalendar.tsx';
 import UV_HostInbox from '@/components/views/UV_HostInbox.tsx';
-import UV_HostGuestProfileModal from '@/components/views/UV_HostGuestProfileModal.tsx';
+
 import UV_HostPerformance from '@/components/views/UV_HostPerformance.tsx';
 import UV_HostPayments from '@/components/views/UV_HostPayments.tsx';
 import UV_HostSupportTicket from '@/components/views/UV_HostSupportTicket.tsx';

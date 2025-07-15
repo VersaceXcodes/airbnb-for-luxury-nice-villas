@@ -4,15 +4,15 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { z } from 'zod';
-// import { createUserInputSchema, User } from '@schema'; // pulled from shared types
+import { User, createUserInputSchema } from "@/schema";
 import { use_app_store } from '@/store/main';
 
 // --- Zod aliases --------------------------------------------------
 interface RegisterReq {
   email: string;
   password: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   role: 'host';
 }
 interface RegisterRes { user: User; token: string }
@@ -21,8 +21,7 @@ interface RegisterRes { user: User; token: string }
 interface EligibleReq { address: string }
 interface EligibleRes { eligible: boolean }
 
-// --- CreateHost stub ---------------------------------------------
-interface CreateHostReq { user_id:string; payout_schedule:'weekly'; onboarding_complete:false }
+
 
 // -----------------------------------------------------------------
 const UV_HostSignUp: React.FC = () => {

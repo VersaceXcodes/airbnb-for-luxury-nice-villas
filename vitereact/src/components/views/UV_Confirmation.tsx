@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
-// import type { Booking, Villa } from '@schema';
+import { use_app_store } from '@/store/main';
+import type { Booking, Villa } from '@/schema';
 
 // one-shot confetti type
 declare global {
@@ -29,8 +29,8 @@ const UV_Confirmation: React.FC = () => {
   const [searchParams] = useSearchParams();
   const bookingId = searchParams.get('id');
 
-  const authUser = useAppStore((s) => s.auth_user);
-  const pushNotification = useAppStore((s) => s.push_notification);
+  const authUser = use_app_store((s) => s.auth_user);
+  const pushNotification = use_app_store((s) => s.push_notification);
 
   const { data, isLoading, isError, error } = useQuery<ConfirmationPayload, Error>({
     queryKey: ['bookingConfirmation', bookingId],

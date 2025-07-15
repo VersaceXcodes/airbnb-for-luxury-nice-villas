@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-// import type { GuestReview, CreateGuestReviewInput, Booking } from '@schema';
-import { useAppStore } from '@/store/main';
+import { Booking, GuestReview, CreateGuestReviewInput } from "@/schema";
+import { use_app_store } from '@/store/main';
 
 // Explicit axios instance reused from global store
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 
 // Small SVG Star component inlined to minimise size
 const SvgStar = ({ filled, color }: { filled: boolean; color: string }) => (
@@ -29,8 +29,8 @@ const SvgStar = ({ filled, color }: { filled: boolean; color: string }) => (
 const UV_GuestReview: React.FC = () => {
   const navigate = useNavigate();
   const { bookingId } = useParams<{ bookingId: string }>();
-  const apiClient = useAppStore(state => state.api_client);
-  const pushNotification = useAppStore(state => state.push_notification);
+  const apiClient = use_app_store(state => state.api_client);
+  const pushNotification = use_app_store(state => state.push_notification);
 
   // Local form state
   const [ratings, setRatings] = useState({
@@ -45,58 +45,40 @@ const UV_GuestReview: React.FC = () => {
   const [submitted, setSubmitted] = useState(false); // confirmation stamp
 
   // Fetch booking details
-  const { data: booking, isLoading: loadingBooking } = useQuery<Booking, Error>(
-    ['booking', bookingId],
-    async () => {
+  const { data: booking, isLoading: loadingBooking } = useQuery<Booking, Error>({
+    queryKey: ['booking', bookingId],
+    queryFn: async () => {
       const { data } = await apiClient.get(`/bookings/${bookingId}`);
       return data;
     },
-    { staleTime: 1000 * 60 * 5 }
-  );
+    staleTime: 1000 * 60 * 5
+  });
 
   // Mutation to post the review
-  const mutation = useMutation<GuestReview, AxiosError, CreateGuestReviewInput>(
-    async variables => {
+  const mutation = useMutation<GuestReview, AxiosError, CreateGuestReviewInput>({
+    mutationFn: async variables => {
       const { data } = await apiClient.post('/reviews', variables);
       return data;
     },
-    {
-      onSuccess: () => {
-        setSubmitted(true);
-        setTimeout(() => navigate('/trips', { replace: true }), 1500);
-      },
-      onError: () => pushNotification({ type: 'error', title: 'Error', body: 'Failed to submit review' }),
-    }
-  );
+    onSuccess: () => {
+      setSubmitted(true);
+      setTimeout(() => navigate('/trips', { replace: true }), 1500);
+    },
+    onError: () => pushNotification({ type: 'error', title: 'Error', body: 'Failed to submit review' }),
+  });
 
-  // Parallel mutation for uploading photos
-  const uploadFiles = async (fileList: File[]): Promise<string[]> => {
-    const uploads = await Promise.all(
-      fileList.map(async file => {
-        const form = new FormData();
-        form.append('file', file);
-        form.append('purpose', 'villa_photo');
-        const { data } = await apiClient.post('/file_uploads', form, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return data.file_url;
-      })
-    );
-    return uploads;
-  };
+
 
   const handleSubmit = useCallback(async () => {
-    const photoUrls =
-      files.length === 0 ? [] : await uploadFiles(files);
     const payload: CreateGuestReviewInput = {
       booking_id: booking!.id,
       villa_id: booking!.villa_id,
-      ratings,
+      rating: Math.round((ratings.accuracy + ratings.cleanliness + ratings.communication + ratings.location + ratings.value) / 5),
+      title: 'Guest Review',
       content,
-      photos: photoUrls,
     };
     mutation.mutate(payload);
-  }, [booking, ratings, content, files, mutation]);
+  }, [booking, ratings, content, mutation]);
 
   // Guard against mismatched role while staying in render
   if (loadingBooking) {
@@ -227,13 +209,13 @@ const UV_GuestReview: React.FC = () => {
           {/* SUBMIT */}
           <div className="mt-8 flex justify-end">
             <button
-              disabled={!ready || mutation.isLoading}
+              disabled={!ready || mutation.isPending}
               className={`px-6 py-2 rounded font-semibold text-white ${
                 ready ? 'bg-rose-600 hover:bg-rose-700' : 'bg-gray-400'
               } disabled:opacity-60`}
               onClick={handleSubmit}
             >
-              {mutation.isLoading ? 'Submitting...' : 'Submit Review'}
+              {mutation.isPending ? 'Submitting...' : 'Submit Review'}
             </button>
           </div>
         </div>

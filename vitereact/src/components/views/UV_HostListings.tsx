@@ -2,10 +2,10 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 import axios from 'axios';
 import { z } from 'zod';
-import { villaSchema } from '@/schema'; // defined earlier
+import { villaSchema } from '@/schema';
 
 interface HostKpiRow {
   villa_id: string;
@@ -16,7 +16,7 @@ interface HostKpiRow {
 }
 
 export default function UV_HostListings(): React.ReactElement {
-  const authUser = useAppStore((state) => state.auth_user);
+  const authUser = use_app_store((state) => state.auth_user);
 
   const hostId = authUser?.id as string;
 

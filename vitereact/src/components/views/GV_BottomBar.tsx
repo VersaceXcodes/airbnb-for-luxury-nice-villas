@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAppStore } from '@/store/main';
+import { use_app_store } from '@/store/main';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { z } from 'zod';
@@ -16,8 +16,8 @@ const badgeCountsSchema = z.object({
 type BadgeCounts = z.infer<typeof badgeCountsSchema>;
 
 const GV_BottomBar: React.FC = () => {
-  const screenSize = useAppStore((state) => state.screen_size);
-  const wsSocket = useAppStore((state) => state.ws_socket);
+  const screenSize = use_app_store((state) => state.screen_size);
+  const wsSocket = use_app_store((state) => state.ws_socket);
   const location = useLocation();
 
   const [badgeCounts, setBadgeCounts] = React.useState<BadgeCounts>({
