@@ -13,6 +13,14 @@ import stripe from 'stripe';
 
 import { Pool } from 'pg';
 
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
+
 dotenv.config();
 
 // ------------------------------------------
@@ -25,7 +33,7 @@ const pool = new Pool({
   user      : PGUSER     || "neondb_owner",
   password  : PGPASSWORD || "npg_jAS3aITLC5DX",
   port      : Number(PGPORT),
-  ssl       : { require: true }
+  ssl       : { rejectUnauthorized: false }
 });
 
 // ------------------------------------------
@@ -48,6 +56,9 @@ const Joi = (() => {
     },
     safeParse(v) {
       return this.validate(v);
+    },
+    optional() {
+      return { ...this, optional: true };
     }
   });
   const obj = (shape) => {
@@ -72,7 +83,7 @@ const Joi = (() => {
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 const stripe_secret = process.env.STRIPE_SECRET_KEY ?? 'sk_test_mock';
-const stripeClient  = stripe(stripe_secret);
+const stripeClient  = new stripe(stripe_secret);
 
 function genId(prefix) {
   return `${prefix}_${crypto.randomBytes(10).toString('hex')}`;
@@ -133,7 +144,7 @@ app.post('/auth/signup', async (req, res) => {
       );
     }
     const token = jwt.sign({ sub:id }, JWT_SECRET, { expiresIn: '30d' });
-    res.status(201).json({ token, user: { id, email, role:value.role } });
+    res.status(201).json({ token, user: { id, email: value.email, role:value.role } });
   } catch (e) { res.status(400).json({ error: e?.detail || e.message }); } finally { client.release(); }
 });
 
@@ -151,12 +162,12 @@ app.post('/auth/login', async (req, res) => {
 // ------------------------------------------
 // 5.3 Public search
 const searchQuery = Joi.object({
-  min_guests:Joi.number().optional,
-  max_price:Joi.number().optional,
-  location:Joi.string().optional,
-  tags:      Joi.string().optional,   // comma-sep
-  limit:     Joi.number().optional,
-  offset:    Joi.number().optional
+  min_guests:Joi.number().optional(),
+  max_price:Joi.number().optional(),
+  location:Joi.string().optional(),
+  tags:      Joi.string().optional(),   // comma-sep
+  limit:     Joi.number().optional(),
+  offset:    Joi.number().optional()
 });
 app.get('/search', async (req, res) => {
   const { value, error } = searchQuery.safeParse(req.query);
@@ -189,8 +200,8 @@ const bookingBody = Joi.object({
   check_in:Joi.string(),
   check_out:Joi.string(),
   adults:  Joi.number(),
-  children:Joi.number().optional,
-  infants: Joi.number().optional
+  children:Joi.number().optional(),
+  infants: Joi.number().optional()
 });
 app.post('/bookings/hold', requireAuth(['guest']), async (req, res) => {
   const { error, value } = bookingBody.safeParse(req.body);
@@ -199,7 +210,7 @@ app.post('/bookings/hold', requireAuth(['guest']), async (req, res) => {
   const villa = (await pool.query('SELECT * FROM villas WHERE id=$1 and published=true', [value.villa_id])).rows[0];
   if (!villa) return res.status(400).json({ error: 'Villa invalid' });
 
-  const nights = (new Date(value.check_out) - new Date(value.check_in)) / 86400000;
+  const nights = (new Date(value.check_out).getTime() - new Date(value.check_in).getTime()) / 86400000;
   if (nights<=0) return res.status(400).json({error:'Bad dates'});
   const base = Number(villa.base_price_usd_per_night) * nights;
   const fees = Number(villa.cleaning_fee_usd) + base*Number(villa.service_fee_ratio);
@@ -221,7 +232,7 @@ app.post('/bookings/hold', requireAuth(['guest']), async (req, res) => {
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,'in_progress',$13,now(),now())`,
     [id, req.user.id, value.villa_id, value.check_in, value.check_out,
      value.adults||0, value.children||0, value.infants||0,
-     base, fees, taxes, intent.stripe_secret_key ? 0 : (base+fees+taxes), // in fake mode fallback to 0
+     base, fees, taxes, intents.client_secret ? 0 : (base+fees+taxes), // in fake mode fallback to 0
      intents.id]
   );
   await pool.query(
