@@ -28,4 +28,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOST=0.0.0.0
 # Command to start the backend server - make sure it listens on all interfaces
-CMD ["sh", "-c", "node initdb.js && NODE_ENV=production node server.js"]
+CMD ["sh", "-c", "node initdb.js && NODE_ENV=production node server.ts"]
